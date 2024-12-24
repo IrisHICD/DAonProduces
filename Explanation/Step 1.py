@@ -7,6 +7,11 @@ print(data.head())
 data.drop(columns=["DECIMALS", "TERMINATED", "DGUID"], inplace=True)
 data.drop(columns=["STATUS", "SYMBOL", "VECTOR"], inplace=True)
 
+# How much different products are there? 
+data2 = data["Farm_products"].value_counts()
+data2.info()
+print(data2)
+
 # Decided to focus on one grain at a time
 barley_data = data[data["Farm_products"].str.contains(r'\b\w*Barley\w*\b', regex=True)]
 barley_data.info()
