@@ -86,6 +86,7 @@ checkbox.js_on_change('active', callback)
 # Layout the checkbox and the plot together
 layout = column(checkbox, p)
 
+
 # Save the graph to an HTML file and display it
 output_file("alberta_cattle_interactive_comparison.html")
 show(layout)

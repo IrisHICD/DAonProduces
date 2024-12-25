@@ -1,4 +1,4 @@
-# Averages of the three grain prices
+# Average of 5 similar cattle prices
 
 from bokeh.plotting import figure, show, output_file
 from bokeh.models import DatetimeTickFormatter
@@ -7,7 +7,10 @@ import pandas as pd
 data = pd.read_csv("32100077.csv")  
 
 filtered_data = data[(data["GEO"] == "Alberta") &  
-                     (data["Farm_products"].isin(["Oats [115113111]", "Barley [1151141]", "Rye [1151152]"]))]
+                     (data["Farm_products"].isin(["Steers for slaughter [111111113]", 
+                         "Heifers for slaughter [111111114]",
+                         "Cattle for feeding [11111112]", "Cattle for slaughter [11111111]",
+"Calves for slaughter [111111211]"]))]
 
 filtered_data["REF_DATE"] = pd.to_datetime(filtered_data["REF_DATE"])
 
@@ -31,7 +34,7 @@ p = figure(
     height=500
 )
 
-p.line(pivot_data.index, pivot_data["Average_Price"], line_width=2, color="purple", legend_label="Average Price")
+p.line(pivot_data.index, pivot_data["Average_Price"], line_width=2, color="red", legend_label="Average Price")
 
 p.xaxis.axis_label = "Date"
 p.yaxis.axis_label = "Price (Dollars per metric tonne)"
@@ -43,5 +46,5 @@ p.legend.title = "Products"
 p.xaxis.formatter = DatetimeTickFormatter(months="%b %Y", years="%Y")
 p.xaxis.major_label_orientation = 0.8
 
-output_file("average_grain_prices_alberta.html")
+output_file("average_cattle_prices_alberta.html")
 show(p)
