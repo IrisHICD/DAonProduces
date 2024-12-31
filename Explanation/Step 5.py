@@ -1,9 +1,9 @@
-# Cattle 
+# Testing side widget with annual average
 
 from bokeh.plotting import figure, show, output_file
-from bokeh.models import DatetimeTickFormatter, CheckboxGroup, CustomJS
+from bokeh.models import DatetimeTickFormatter, CheckboxGroup, CustomJS, Slider, Select, Div, ColumnDataSource
+from bokeh.layouts import column, row
 import pandas as pd
-from bokeh.layouts import column
 
 # Load the data
 data = pd.read_csv("32100077.csv")  
@@ -53,7 +53,7 @@ for product, color in products.items():
 
 # Add labels
 p.xaxis.axis_label = "Date"
-p.yaxis.axis_label = "Price (Dollars per metric tonne)"
+p.yaxis.axis_label = "Price (Dollars per hundredweight)"
 
 # Move the legend to the top-left corner
 p.legend.location = "top_left"
@@ -83,9 +83,50 @@ callback = CustomJS(args=dict(lines=lines), code="""
 
 checkbox.js_on_change('active', callback)
 
-# Layout the checkbox and the plot together
-layout = column(checkbox, p)
+# Slider to select the year
+slider = Slider(start=start_year, end=end_year, value=start_year, step=1, title="Select Year")
 
+# Dropdown (Select) to choose the cattle type
+cattle_select = Select(title="Select Cattle Type", value="Cows for slaughter [111111111]", options=list(products.keys()))
+
+# Div widget to display the average price
+average_price_display = Div(text=f"<b>Average Price for {cattle_select.value} in {slider.value}:</b> $0.00", width=300, height=30)
+
+# Create a ColumnDataSource to pass the data to JS
+source = ColumnDataSource(filtered_data)
+
+# JavaScript callback to update the average price
+average_price_callback = CustomJS(args=dict(source=source, slider=slider, cattle_select=cattle_select, average_price_display=average_price_display), code="""
+    var selected_year = slider.value;
+    var selected_cattle_type = cattle_select.value;
+    var data = source.data;
+    
+    var total = 0;
+    var count = 0;
+    
+    // Loop through the data and calculate the average for the selected cattle type and year
+    for (var i = 0; i < data['REF_DATE'].length; i++) {
+        var year = new Date(data['REF_DATE'][i]).getFullYear();
+        if (year === selected_year && data['Farm_products'][i] === selected_cattle_type) {
+            total += data['VALUE'][i];
+            count++;
+        }
+    }
+    
+    // Calculate the average
+    var average_price = (count > 0) ? total / count : 0;
+    average_price_display.text = "<b>Average Price for " + selected_cattle_type + " in " + selected_year + ":</b> $" + average_price.toFixed(2);
+""")
+
+# Attach the callback to the slider and the select dropdown
+slider.js_on_change('value', average_price_callback)
+cattle_select.js_on_change('value', average_price_callback)
+
+# Arrange everything (checkbox, plot, and widgets) in a layout
+layout = row(
+    column(checkbox, p),  # Plot and checkbox on the left
+    column(slider, cattle_select, average_price_display)  # Widgets on the right
+)
 
 # Save the graph to an HTML file and display it
 output_file("alberta_cattle_interactive_comparison.html")
